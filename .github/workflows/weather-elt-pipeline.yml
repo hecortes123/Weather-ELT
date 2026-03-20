@@ -42,8 +42,8 @@ jobs:
       run: |
         # Configurar variables de entorno para dbt
         export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
-        export GCP_PROJECT_ID=$GCP_PROJECT_ID
-        export GCP_DATASET=$GCP_DATASET
+        export GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
+        export GCP_DATASET=${{ secrets.GCP_DATASET }}
         cd dbt_project
         dbt debug --profiles-dir .
         dbt deps --profiles-dir .
