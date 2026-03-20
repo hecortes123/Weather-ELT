@@ -44,21 +44,18 @@ jobs:
         export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
         export GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
         export GCP_DATASET=${{ secrets.GCP_DATASET }}
-        cd dbt_project
-        dbt debug --profiles-dir .
-        dbt deps --profiles-dir .
+        dbt debug --profiles-dir dbt_project --project-dir dbt_project
+        dbt deps --profiles-dir dbt_project --project-dir dbt_project
 
     - name: Ejecutar transformaciones dbt
       env:
         GOOGLE_APPLICATION_CREDENTIALS: gcp-key.json
       run: |
-        cd dbt_project
-        dbt run --profiles-dir .
+        dbt run --profiles-dir dbt_project --project-dir dbt_project
 
     - name: Generar documentación dbt
       run: |
-        cd dbt_project
-        dbt docs generate --profiles-dir .
+        dbt docs generate --profiles-dir dbt_project --project-dir dbt_project
 
     - name: Limpiar credenciales
       if: always()
