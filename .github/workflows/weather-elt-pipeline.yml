@@ -43,8 +43,9 @@ jobs:
         export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
         export GCP_PROJECT_ID=$GCP_PROJECT_ID
         export GCP_DATASET=$GCP_DATASET
-        dbt debug --profiles-dir dbt_project
-        dbt deps --profiles-dir dbt_project
+        cd dbt_project
+        dbt debug --profiles-dir .
+        dbt deps --profiles-dir .
 
     - name: Ejecutar transformaciones dbt
       env:
