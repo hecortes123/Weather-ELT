@@ -1,0 +1,73 @@
+name: Weather ELT Pipeline
+
+on:
+  schedule:
+    # Ejecuta diariamente a las 00:00 hrs hora Bogotá (05:00 UTC)
+    - cron: '0 5 * * *'
+  workflow_dispatch:  # Permite ejecución manual desde GitHub
+
+jobs:
+  weather-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+
+    - name: Configurar Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ingestion/requirements.txt
+
+    - name: Crear archivo de credenciales GCP
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      run: |
+        echo "$GCP_CREDENTIALS" > gcp-key.json
+        chmod 600 gcp-key.json
+
+    - name: Ejecutar Oracle Open-Meteo (extraction.py)
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: gcp-key.json
+      run: |
+        python ingestion/extraction.py
+
+    - name: Configurar dbt
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        GCP_DATASET: ${{ secrets.GCP_DATASET }}
+      run: |
+        dbt debug --profiles-dir dbt_project
+        dbt deps --profiles-dir dbt_project
+
+    - name: Ejecutar transformaciones dbt
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: gcp-key.json
+      run: |
+        cd dbt_project
+        dbt run --profiles-dir .
+
+    - name: Generar documentación dbt
+      run: |
+        cd dbt_project
+        dbt docs generate --profiles-dir .
+
+    - name: Limpiar credenciales
+      if: always()
+      run: rm -f gcp-key.json
+
+    - name: Notificar éxito
+      if: success()
+      run: echo "✅ Pipeline ejecutado exitosamente a las $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
+
+    - name: Notificar error
+      if: failure()
+      run: |
+        echo "❌ Pipeline falló"
+        exit 1

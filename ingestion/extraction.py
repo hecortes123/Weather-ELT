@@ -11,17 +11,20 @@ Description:
 """
 
 import requests # For making HTTP requests to the Open-Meteo API
-import urllib3  # Agrega esta importación
+import urllib3  # For disabling SSL warnings
 
 # Deshabilita warnings de SSL (opcional, para menos ruido)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from google.cloud import bigquery # For interacting with Google BigQuery
 import os # For accessing environment variables (e.g., BigQuery credentials and table ID)
+from dotenv import load_dotenv
+
+load_dotenv(override=True)  # Load environment variables from .env file, overriding existing
 
 def fetch_weather_data(latitude, longitude, hourly_params):
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly={hourly_params}&timezone=America/Bogota"
-    response = requests.get(url, verify=False)  # Agrega verify=False
+    response = requests.get(url)
     if response.status_code == 200:
         print("API Open-Meteo is online y responded correctly.")
         return response.json()
