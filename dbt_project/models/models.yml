@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: weather_data  # Este es el identificador que usaremos en el SQL
+    project: "{{ env_var('GCP_PROJECT_ID', 'ibague-weather') }}"
+    dataset: "{{ env_var('GCP_DATASET', 'weather_data') }}"
+    tables:
+      - name: weather_forecast
+      - name: weather_codes

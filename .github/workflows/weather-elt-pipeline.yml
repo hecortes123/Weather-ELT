@@ -2,9 +2,14 @@ name: Weather ELT Pipeline
 
 on:
   schedule:
-    # Ejecuta diariamente a las 00:00 hrs hora Bogotá (05:00 UTC)
     - cron: '0 5 * * *'
-  workflow_dispatch:  # Permite ejecución manual desde GitHub
+  workflow_dispatch:
+
+# Definir variables a nivel de JOB para que todos los steps las vean
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_DATASET: ${{ secrets.GCP_DATASET }}
+  GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp-key.json
 
 jobs:
   weather-pipeline:
@@ -14,8 +19,6 @@ jobs:
     steps:
     - name: Checkout código
       uses: actions/checkout@v3
-      with:
-        path: .
 
     - name: Configurar Python 3.11
       uses: actions/setup-python@v4
@@ -26,38 +29,23 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r ingestion/requirements.txt
+        pip install dbt-bigquery  # Aseguramos que dbt esté instalado
 
     - name: Crear archivo de credenciales GCP
-      env:
-        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       run: |
-        echo "$GCP_CREDENTIALS" > gcp-key.json
+        echo '${{ secrets.GCP_CREDENTIALS }}' > gcp-key.json
         chmod 600 gcp-key.json
 
-    - name: Ejecutar Oracle Open-Meteo (extraction.py)
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: gcp-key.json
-      run: |
-        python ingestion/extraction.py
+    - name: Ejecutar Extracción
+      run: python ingestion/extraction.py
 
-    - name: Configurar dbt
+    - name: dbt Debug & Deps
       run: |
-        # Configurar variables de entorno para dbt
-        export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
-        export GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
-        export GCP_DATASET=${{ secrets.GCP_DATASET }}
         dbt debug --profiles-dir dbt_project --project-dir dbt_project
         dbt deps --profiles-dir dbt_project --project-dir dbt_project
 
-    - name: Ejecutar transformaciones dbt
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: gcp-key.json
-      run: |
-        dbt run --profiles-dir dbt_project --project-dir dbt_project
-
-    - name: Generar documentación dbt
-      run: |
-        dbt docs generate --profiles-dir dbt_project --project-dir dbt_project
+    - name: dbt Run (Transformaciones)
+      run: dbt run --profiles-dir dbt_project --project-dir dbt_project
 
     - name: Limpiar credenciales
       if: always()

@@ -7,7 +7,7 @@ weather_forecast:
       dataset: "{{ env_var('GCP_DATASET', 'weather_data') }}"
       threads: 4
       timeout_seconds: 300
-      location: US
+      location: us-east1
       priority: interactive
       retries: 1
       keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"

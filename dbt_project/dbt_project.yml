@@ -16,7 +16,7 @@ clean-targets:
 
 models:
   weather_forecast:
-    materialized: table
+    +materialized: table
     +docs:
       show: true
 
