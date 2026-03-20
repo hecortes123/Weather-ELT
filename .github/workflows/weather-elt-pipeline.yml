@@ -39,10 +39,10 @@ jobs:
         python ingestion/extraction.py
 
     - name: Configurar dbt
-      env:
-        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        GCP_DATASET: ${{ secrets.GCP_DATASET }}
       run: |
+        export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
+        export GCP_PROJECT_ID=$GCP_PROJECT_ID
+        export GCP_DATASET=$GCP_DATASET
         dbt debug --profiles-dir dbt_project
         dbt deps --profiles-dir dbt_project
 
