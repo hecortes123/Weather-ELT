@@ -14,8 +14,7 @@ view: weather_forecast {
   dimension: temperature_2m {
     type: number
     sql: ${TABLE}.temperature_2m ;;
-    description: "Temperature at 2 meters in Celsius"
-    unit: "°C"
+    value_format: "0.0# \"°C\""  # Esto añade el °C visualmente en Looker
   }
 
   dimension: apparent_temperature {
